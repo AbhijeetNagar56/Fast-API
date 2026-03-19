@@ -1,4 +1,6 @@
 venv
 .env
 node_modules
-Frontend
+frontend
+.gitignore
+dist

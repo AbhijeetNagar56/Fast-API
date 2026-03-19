@@ -20,6 +20,9 @@ from fastapi import (
     Response,
     UploadFile,
 )
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, EmailStr
@@ -70,9 +73,15 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+# Updated CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL if NODE_ENV == "production" else "http://localhost:5173"],
+    allow_origins=[
+        FRONTEND_URL, 
+        "http://localhost:3000",   # The port your FastAPI is running on
+        "http://127.0.0.1:3000",
+        "http://localhost:5173"    # Keep this for development/Vite HMR
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -1333,6 +1342,8 @@ async def book_slot_appointment(
         "appointment": {"_id": appointment.id, "bookingId": request_group_id},
     }
 
+# Serve the 'dist' folder at the root path ('/') with HTML support
+app.mount("/", StaticFiles(directory=Path("../frontend/dist"), html=True), name="static")   
 
 @app.get("/api/test")
 async def test_connection(db: Session = Depends(get_db)):
