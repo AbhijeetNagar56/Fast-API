@@ -4,3 +4,4 @@ node_modules
 frontend
 .gitignore
 dist
+__pycache__
