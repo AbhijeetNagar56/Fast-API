@@ -1,7 +1,7 @@
 venv
 .env
 node_modules
-frontend
 .gitignore
 dist
 __pycache__
+*.sh
