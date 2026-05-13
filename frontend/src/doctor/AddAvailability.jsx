@@ -1,125 +1,42 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { Calendar, Clock, Hospital } from "lucide-react";
-import axiosInstance from "../api/axios";
 
-export default function AddAvailability() {
-  const [doctors, setDoctors] = useState([]);
-  const [doctorId, setDoctorId] = useState("");
-  const [date, setDate] = useState("");
-  const [selectedTimes, setSelectedTimes] = useState([]);
+// Mock data (frontend-only)
+const initialDoctors = [
+  {
+    id: 1,
+    name: "Dr. Anil Sharma",
+    hospital: "City Care Hospital",
+    specialization: "Cardiologist",
+    availability: ["10:00 AM - 12:00 PM", "4:00 PM - 6:00 PM"],
+  },
+  {
+    id: 2,
+    name: "Dr. Neha Verma",
+    hospital: "Green Life Hospital",
+    specialization: "Dermatologist",
+    availability: ["11:00 AM - 2:00 PM"],
+  },
+];
 
-  const TIMES = [
-    "09:00 - 09:15",
-    "09:15 - 09:30",
-    "09:30 - 09:45",
-    "10:00 - 10:15",
-  ];
+export default function DoctorAvailability() {
+  const [doctors, setDoctors] = useState(initialDoctors);
+  const [newSlot, setNewSlot] = useState("");
+  const [selectedDoctor, setSelectedDoctor] = useState(null);
 
-  useEffect(() => {
-    const fetchDoctor = async () => {
-      try {
-        const { data } = await axiosInstance.get("/doctor");
-        setDoctorId(data?._id || "");
-      } catch (error) {
-        console.error("Failed to fetch doctor:", error);
-      }
-    };
+  const addAvailability = () => {
+    if (!newSlot || selectedDoctor === null) return;
 
-    fetchDoctor();
-  }, []);
-
-  const fetchDoctorsFromSlots = async () => {
-    try {
-      const { data } = await axiosInstance.get("/slots/my");
-      setDoctors(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("Failed to fetch doctors from slots:", error);
-      setDoctors([]);
-    }
-  };
-
-  useEffect(() => {
-    fetchDoctorsFromSlots();
-  }, []);
-
-  const formatDate = (dateValue) => {
-    const parsed = new Date(`${dateValue}T00:00:00`);
-    if (Number.isNaN(parsed.getTime())) return dateValue;
-
-    return parsed.toLocaleDateString("en-IN", {
-      weekday: "short",
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
-  const doctorsWithGroupedSlots = useMemo(() => {
-    return doctors.map((doc) => {
-      const grouped = (doc.availability || []).reduce((acc, rawSlot) => {
-        const [datePart, timePart] = String(rawSlot).split("|").map((v) => v?.trim());
-        if (!datePart || !timePart) return acc;
-
-        if (!acc[datePart]) acc[datePart] = new Set();
-        acc[datePart].add(timePart);
-        return acc;
-      }, {});
-
-      const slotGroups = Object.entries(grouped).map(([date, times]) => ({
-        date,
-        displayDate: formatDate(date),
-        times: Array.from(times).sort(),
-      }));
-
-      slotGroups.sort((a, b) => a.date.localeCompare(b.date));
-
-      return { ...doc, slotGroups };
-    });
-  }, [doctors]);
-
-  const toggleTime = (time) => {
-    setSelectedTimes((prev) =>
-      prev.includes(time)
-        ? prev.filter((t) => t !== time)
-        : [...prev, time]
+    setDoctors((prev) =>
+      prev.map((doc) =>
+        doc.id === selectedDoctor
+          ? { ...doc, availability: [...doc.availability, newSlot] }
+          : doc
+      )
     );
-  };
 
-  const createSlots = async () => {
-    if (!doctorId) {
-      alert("Doctor not found. Please login again.");
-      return;
-    }
-
-    if (!date) {
-      alert("Please select a date");
-      return;
-    }
-
-    if (selectedTimes.length === 0) {
-      alert("Please select at least one time slot");
-      return;
-    }
-
-    try {
-      const { data } = await axiosInstance.post("/slots/create", {
-        doctorId,
-        date,
-        times: selectedTimes,
-      });
-
-      if (!data) {
-        alert("Failed to publish slots");
-        return;
-      }
-
-      alert(data.message || "Slots published successfully");
-      setSelectedTimes([]);
-      fetchDoctorsFromSlots();
-    } catch (error) {
-      console.error("Frontend error:", error);
-      alert(error.response?.data?.message || "Something went wrong");
-    }
+    setNewSlot("");
+    setSelectedDoctor(null);
   };
 
   return (
@@ -130,11 +47,12 @@ export default function AddAvailability() {
           Doctor Availability
         </h1>
 
+        {/* Patient View */}
         <section>
-          <h2 className="text-xl font-semibold mb-4">Your Published Slots</h2>
+          <h2 className="text-xl font-semibold mb-4">Available Doctors</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {doctorsWithGroupedSlots.map((doc) => (
-              <div key={doc._id} className="card bg-base-100 shadow-lg">
+            {doctors.map((doc) => (
+              <div key={doc.id} className="card bg-base-100 shadow-lg">
                 <div className="card-body">
                   <h3 className="card-title">{doc.name}</h3>
 
@@ -142,34 +60,19 @@ export default function AddAvailability() {
                     <Hospital size={16} /> {doc.hospital}
                   </p>
 
-                    <p className="text-sm text-base-content/70">
-                      {doc.specialization}
-                    </p>
+                  <p className="text-sm text-base-content/70">
+                    {doc.specialization}
+                  </p>
 
                   <div className="mt-3">
                     <p className="font-medium flex items-center gap-2">
                       <Clock size={16} /> Availability
                     </p>
-                    {doc.slotGroups.length === 0 ? (
-                      <p className="text-sm text-base-content/70 mt-2">
-                        No slots available
-                      </p>
-                    ) : (
-                      <div className="mt-2 space-y-3">
-                        {doc.slotGroups.map((group) => (
-                          <div key={group.date} className="bg-base-200 rounded-lg p-3">
-                            <p className="text-sm font-semibold">{group.displayDate}</p>
-                            <div className="flex flex-wrap gap-2 mt-2">
-                              {group.times.map((time) => (
-                                <span key={`${group.date}-${time}`} className="badge badge-outline">
-                                  {time}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    <ul className="list-disc list-inside text-sm">
+                      {doc.availability.map((slot, idx) => (
+                        <li key={idx}>{slot}</li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
               </div>
@@ -183,37 +86,33 @@ export default function AddAvailability() {
             Doctor: Add Availability
           </h2>
 
-          <div className="flex flex-col gap-4">
-            <label className="form-control w-full md:w-1/3">
-              <div className="label">
-                <span className="label-text">Select Date</span>
-              </div>
-              <input
-                type="date"
-                className="input input-bordered w-full"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-              />
-            </label>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-              {TIMES.map((time) => (
-                <button
-                  key={time}
-                  type="button"
-                  onClick={() => toggleTime(time)}
-                  className={`btn btn-outline justify-start ${
-                    selectedTimes.includes(time) ? "btn-primary" : ""
-                  }`}
-                >
-                  {time}
-                </button>
+          <div className="flex flex-col md:flex-row gap-4">
+            <select
+              className="select select-bordered w-full md:w-1/3"
+              value={selectedDoctor ?? ""}
+              onChange={(e) => setSelectedDoctor(Number(e.target.value))}
+            >
+              <option value="" disabled>
+                Select Doctor
+              </option>
+              {doctors.map((doc) => (
+                <option key={doc.id} value={doc.id}>
+                  {doc.name}
+                </option>
               ))}
-            </div>
+            </select>
 
-            <button onClick={createSlots} className="btn btn-primary w-fit">
+            <input
+              type="text"
+              placeholder="e.g. 3:00 PM - 5:00 PM"
+              className="input input-bordered w-full md:w-1/3"
+              value={newSlot}
+              onChange={(e) => setNewSlot(e.target.value)}
+            />
+
+            <button onClick={addAvailability} className="btn btn-primary">
               <Calendar size={18} />
-              Publish Slots
+              Add Slot
             </button>
           </div>
         </section>

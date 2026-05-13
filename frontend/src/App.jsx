@@ -20,7 +20,6 @@ import DoctorDetails from './doctor/DoctorDetail';
 import MyPatient from './doctor/MyPatient';
 import DoctorAuth from './doctor/DoctorAuth';
 import DoctorDash from './doctor/DoctorDash';
-import AddAvailability from './doctor/AddAvailability';
 
 
 // patient page imports
@@ -35,8 +34,6 @@ import Auth from './patient/Auth';
 import DetailConfirmation from './patient/DetailConfirmation'
 import DoctorAvailability from './patient/DoctorAvailability';
 import BedAvailability from './patient/BedAvailability';
-import RequireUser from "./routes/RequireUser";
-import RequireDoctor from "./routes/RequireDoctor";
 
 
 export default function App() {
@@ -74,24 +71,18 @@ export default function App() {
         <Route path='/bedavailable' element={<BedAvailability />} />
         <Route path='/history' element={<HealthSummary/>} />
         <Route path='/services' element={<Service/>} />
-
-        <Route element={<RequireUser />}>
-          <Route path='/slots' element={<DoctorAvailability />} />
-        </Route>
         
 
         {/* Doctor related routes */}
         <Route path='/doctor' element={<DoctorAuth />} />
         <Route path='/doctordash' element={<DoctorDash />} />
+        <Route path='/doctoravailable' element={<DoctorAvailability />} />
         <Route path='/doctordetail' element={<DoctorDetails />} />
         <Route path='/doctorprofile' element={<DoctorDet />} />
         <Route path='/patients' element={<MyPatient />} />
-
-        <Route element={<RequireDoctor />}>
-          <Route path='/doctor/slots' element={<AddAvailability />} />
-        </Route>
         
       </Routes>
     </div>
   );
 }
+

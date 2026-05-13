@@ -1,37 +1,24 @@
 import { useState } from "react";
-import { useNavigate } from "react-router";
 import axiosInstance from "../api/axios";
 import toast from "react-hot-toast";
-import { AGE_MAX, AGE_MIN, parseAge } from "../utils/validation";
 
 const DoctorDetails = () => {
-  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [hospital, setHospital] = useState("");
   const [age, setAge] = useState("");
 
   const handleSubmit = async () => {
     try {
-      const parsedAge = parseAge(age);
-      if (!name.trim() || !hospital.trim()) {
-        toast.error("Name and hospital are required");
-        return;
-      }
-      if (parsedAge === null) {
-        toast.error(`Age must be a whole number between ${AGE_MIN} and ${AGE_MAX}`);
-        return;
-      }
-
       const response = await axiosInstance.patch(
-        "/doctor/details",
-        { name: name.trim(), hospital: hospital.trim(), age: parsedAge }
+        "/doctor/details", // 👈 Backend endpoint
+        { name, hospital, age }
       );
 
       console.log("Doctor details saved:", response.data);
       toast.success("Doctor details submitted successfully!");
 
       // Redirect to homepage or dashboard
-      navigate("/doctordash");
+      window.location.href = "/doctordash";
     } catch (error) {
       console.error("Error saving doctor details:", error.response?.data || error.message);
     }
@@ -79,11 +66,15 @@ const DoctorDetails = () => {
             <input
               type="number"
               value={age}
-              onChange={(e) => setAge(e.target.value)}
+              onChange={(e) => {
+                if (e.target.value != null && e.target.value < 1) {
+                  toast.error("Invalid Age.");
+                } else {
+                  setAge(e.target.value);
+                }
+              }}
               placeholder="Enter doctor's age"
               className="input input-bordered w-full"
-              min={AGE_MIN}
-              max={AGE_MAX}
             />
           </label>
 

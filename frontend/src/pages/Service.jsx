@@ -1,108 +1,151 @@
-import {  ClipboardMinus, FileClock, CalendarCheck2, Bed, BriefcaseMedical, UserSearch } from "lucide-react";
+import { ClipboardMinus, ThermometerSun, CalendarCheck2, Bed, BriefcaseMedical, UserSearch, Search, ArrowRight, ThermometerSunIcon } from "lucide-react";
 import { Link } from "react-router";
-import Navbar from "../components/Navbar"
-import Footer from "../components/Footer"
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 const quickActions = [
-  
   {
     id: 1,
     title: "Upload Medical Reports",
-    icon: <ClipboardMinus />,
-    description: "Securely upload and manage reports.",
-    style: "btn-secondary",
+    icon: <ClipboardMinus size={28} />,
+    description: "Securely upload, encrypt, and manage your health records in the vault.",
+    style: "bg-purple-50 text-purple-600 ring-purple-100",
     view: "/upload",
+    accent: "purple"
   },
-  
   {
     id: 2,
-    title: "Book an Appointment",
-    icon: <CalendarCheck2 />,
-    description: "Book an appointment with specilist pratitioners.",
-    style: "btn-info",
+    title: "Book Appointment",
+    icon: <CalendarCheck2 size={28} />,
+    description: "Schedule consultations with specialized practitioners in your area.",
+    style: "bg-blue-50 text-blue-600 ring-blue-100",
     view: "/appointment",
+    accent: "blue"
   },
-  
   {
     id: 3,
-    title: "Doctor availability",
-    icon: <UserSearch />,
-    description: "See the doctor availability.",
-    style: "btn-neutral",
-    view: "/slots",
+    title: "Bed Availability",
+    icon: <Bed size={28} />,
+    description: "Real-time tracking of vacant beds in nearby emergency centers.",
+    style: "bg-emerald-50 text-emerald-600 ring-emerald-100",
+    view: "/bedavailable",
+    accent: "emerald"
   },
   {
     id: 4,
-    title: "Search for doctor",
-    icon: <BriefcaseMedical />, 
-    description: "Find a doctor",
-    style: "btn-secondary",
-    view: "/mydoctor",
+    title: "Doctor Availability",
+    icon: <UserSearch size={28} />,
+    description: "Check live shift timings and availability of your preferred doctors.",
+    style: "bg-indigo-50 text-indigo-600 ring-indigo-100",
+    view: "/doctoravailable",
+    accent: "indigo"
   },
   {
     id: 5,
-    title: "View Health Summary",
-    icon: <FileClock />,
-    description: "See history and recent interactions.",
-    style: "btn-accent",
-    view: "/history",
+    title: "Search for Doctor",
+    icon: <BriefcaseMedical size={28} />, 
+    description: "Discover experts across 40+ specialties based on reviews and distance.",
+    style: "bg-rose-50 text-rose-600 ring-rose-100",
+    view: "/mydoctor",
+    accent: "rose"
   },
   {
     id: 6,
-    title: "Bed availability",
-    icon: <Bed />,
-    description: "See the bed available in the hospitals.",
-    style: "btn-success",
-    view: "/bedavailable",
-  },
-
+    title: "Disease Solution",
+    icon: <ThermometerSun size={28} />, 
+    description: "Database of 1000+ diseases with symptoms, causes, and treatment options for informed decisions.",
+    style: "bg-emerald-50 text-emerald-600 ring-emerald-100",
+    view: "/disease-prediction",
+    accent: "emerald"
+  }
 ];
-
 
 const Service = () => {
   return (
-    <div>
-        <Navbar />
-        <div className="container justify-self-center my-10">
+    <div className="flex flex-col min-h-screen bg-slate-50/50">
+      <Navbar />
+
+      {/* --- PAGE HEADER --- */}
+      <div className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-6 py-12 md:py-16">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+              <h1 className="text-4xl font-black text-slate-800 tracking-tight">Medical Services</h1>
+              <p className="text-slate-500 mt-2 text-lg">Centralized access to all MediRaksha health tools.</p>
+            </div>
+            
+            {/* Search Bar Decoration */}
+            <div className="relative w-full md:w-96">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+              <input 
+                type="text" 
+                placeholder="Search for a service..." 
+                className="input w-full pl-12 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 transition-all"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <main className="grow max-w-7xl mx-auto w-full px-6 py-12">
+        {/* --- SERVICE GRID --- */}
         <section>
-          <h2 className="text-2xl font-semibold ml-5 mb-6 text-base-content">
-            All Services
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {quickActions.map((action) => (
-              <div
+              <Link
                 key={action.id}
-                className="card mx-5 shadow-lg bg-base-100 transition duration-300 transform hover:scale-[1.02] cursor-pointer"
+                to={action.view}
+                className="group relative bg-white rounded-4xl p-8 border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 flex flex-col h-full"
               >
-                <div className="card-body p-6">
-                  <div
-                    className={`text-4xl font-bold mb-3 ${action.style.replace("btn-", "text-")}`}
-                  >
-                    {action.icon}
-                  </div>
-                  <h3 className="card-title text-xl text-base-content">
+                {/* Icon Container */}
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 ring-4 transition-transform group-hover:scale-110 duration-300 ${action.style}`}>
+                  {action.icon}
+                </div>
+
+                {/* Content */}
+                <div className="grow">
+                  <h3 className="text-2xl font-bold text-slate-800 mb-3 tracking-tight group-hover:text-indigo-600 transition-colors">
                     {action.title}
                   </h3>
-                  <p className="text-base-content/70 text-sm mt-1">
+                  <p className="text-slate-500 leading-relaxed mb-6">
                     {action.description}
                   </p>
-                  <div className="card-actions justify-end mt-4">
-                    <Link
-                      to={action.view}
-                      className={`btn btn-sm ${action.style}`}
-                    >
-                      Go Now
-                    </Link>
+                </div>
+
+                {/* Footer Action */}
+                <div className="flex items-center justify-between mt-auto pt-6 border-t border-slate-50">
+                  <span className={`text-sm font-bold tracking-widest uppercase transition-opacity group-hover:opacity-100 opacity-0 flex items-center gap-2 ${action.style.split(' ')[1]}`}>
+                    Go Now <ArrowRight size={16} />
+                  </span>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-slate-100 text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-all`}>
+                    <ArrowRight size={16} />
                   </div>
                 </div>
-              </div>
+
+                {/* Decorative background element */}
+                <div className="absolute top-4 right-4 text-slate-50 opacity-0 group-hover:opacity-10 scale-150 pointer-events-none transition-opacity">
+                    {action.icon}
+                </div>
+              </Link>
             ))}
           </div>
         </section>
-        </div>
-        <Footer />
-    </div>
-  )
-}
 
-export default Service
+        {/* --- HELP / CONTACT SECTION --- */}
+        <section className="mt-20 p-10 rounded-[2.5rem] bg-indigo-900 text-white flex flex-col md:flex-row items-center justify-between gap-8">
+          <div>
+            <h2 className="text-3xl font-bold mb-2">Can't find a specific service?</h2>
+            <p className="text-indigo-200">Our medical assistance team is available 24/7 for support.</p>
+          </div>
+          <button className="btn btn-lg bg-white text-indigo-900 border-none hover:bg-indigo-50 px-10 rounded-2xl font-bold">
+            Contact Support
+          </button>
+        </section>
+      </main>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default Service;

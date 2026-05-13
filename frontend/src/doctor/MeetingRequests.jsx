@@ -13,7 +13,7 @@ const FILTERS = ["all", "pending", "confirmed", "cancelled"];
 export default function MeetingRequests() {
   const [meetings, setMeetings]   = useState([]);
   const [loading, setLoading]     = useState(true);
-  const [filter, setFilter]       = useState("all");
+  const [filter, setFilter]       = useState("pending");
   const [expanded, setExpanded]   = useState(null);
   const [acting, setActing]       = useState(null); // id currently being approved/denied
 
@@ -37,7 +37,10 @@ export default function MeetingRequests() {
     setActing(id);
     try {
       await axiosInstance.patch(`/doctor/appointments/${id}`, { status });
-      await fetchMeetings();
+      // Optimistically update local state
+      setMeetings((prev) =>
+        prev.map((m) => (m._id === id ? { ...m, status } : m))
+      );
     } catch (err) {
       alert(err.response?.data?.msg || "Action failed.");
     } finally {
@@ -59,7 +62,7 @@ export default function MeetingRequests() {
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">Appointments</h2>
+        <h2 className="text-xl font-bold">Meeting Requests</h2>
         <button
           onClick={fetchMeetings}
           className="btn btn-ghost btn-sm"
@@ -89,7 +92,7 @@ export default function MeetingRequests() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-12 text-gray-400">
-          No {filter === "all" ? "" : filter} appointments found.
+          No {filter === "all" ? "" : filter} requests found.
         </div>
       ) : (
         <div className="space-y-3">
@@ -193,7 +196,7 @@ export default function MeetingRequests() {
                     {/* Already actioned label */}
                     {m.status !== "pending" && (
                       <p className="text-xs text-gray-400 text-right">
-                        This appointment is {m.status}.
+                        This request has been {m.status}.
                       </p>
                     )}
                   </div>

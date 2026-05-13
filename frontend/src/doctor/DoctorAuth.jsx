@@ -1,196 +1,191 @@
 import { useState } from "react";
 import axiosInstance from "../api/axios";
 import { Link } from "react-router";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Stethoscope } from "lucide-react";
 import toast from "react-hot-toast";
-import { parseAge } from "../utils/validation";
-import { useNavigate } from "react-router";
 
 const DoctorAuth = () => {
-  const navigate = useNavigate();
-  const [su, setsu] = useState(true);
+  const [isSignUp, setIsSignUp] = useState(true);
   const [doctorId, setDoctorId] = useState("");
   const [password, setPassword] = useState("");
 
-  // 🔹 Doctor Signup
-  const handleSignup = async () => {
-    try {
-      await axiosInstance.post("/auth/doctor", {
-        doctorId,
-        password,
-      });
+  const handlePostAuthRedirect = (data) => {
+    if (!data.name || !data.hospital || !data.age) {
+      window.location.href = "/doctordetail";
+    } else {
+      window.location.href = "/doctordash";
+    }
+  };
 
+  const handleSignup = async (e) => {
+    e.preventDefault();
+    try {
+      await axiosInstance.post("/auth/doctor", { doctorId, password });
       toast.success("Request sent for verification 🩺");
-      await handleLogin(); // auto-login (if allowed)
+      // Note: Auto-login only works if your backend doesn't require 
+      // manual admin approval before the first login.
+      await handleLogin(); 
     } catch (error) {
-      toast.error(
-        error.response?.data?.message ||
-          "Doctor already registered or invalid ID"
-      );
+      toast.error(error.response?.data?.message || "Registration failed");
     }
   };
 
-  // 🔹 Doctor Login
-  const handleLogin = async () => {
+  const handleLogin = async (e) => {
+    if (e) e.preventDefault();
     try {
-      await axiosInstance.post("/auth/doctor/login", {
-        doctorId,
-        password,
-      });
-
+      await axiosInstance.post("/auth/doctor/login", { doctorId, password });
       toast.success("Welcome back, Doctor");
-
       const res = await axiosInstance.get('/doctor');
-
-      const data = res.data; 
-
-      if (!data.name || !data.hospital || parseAge(data.age) === null) {
-        navigate("/doctordetail");
-      } else {
-        navigate("/doctordash");
-      }
-      
+      handlePostAuthRedirect(res.data);
     } catch (error) {
-      toast.error(
-        error.response?.data?.message ||
-          "Invalid DoctorID or password"
-      );
+      toast.error(error.response?.data?.message || "Invalid DoctorID or password");
     }
   };
 
-  // 🔹 Signup UI
-  if (su) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-base-200">
-        <div className="card w-full max-w-sm shadow-xl bg-base-100">
-          <div className="card-body">
-            <div className="flex items-center justify-between mb-4">
-              <Link to="/" className="text-gray-500 hover:text-gray-700">
-                <ArrowLeft size={24} />
-              </Link>
-              <h2 className="text-2xl font-bold text-center grow">
-                Doctor&apos;s Registration
-              </h2>
-              <div className="w-6"></div>
-            </div>
+  return (
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4 font-sans">
+      {/* Back Button */}
+      <Link to="/" className="absolute top-8 left-8 flex items-center gap-2 text-slate-500 hover:text-cyan-600 transition-colors group">
+        <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+        <span className="font-medium">Back to Home</span>
+      </Link>
 
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSignup();
-              }}
-            >
-              <label className="form-control w-full mb-4">
-                <div className="label">
-                  <span className="label-text">DoctorID</span>
+      {/* Main Auth Card */}
+      <div className="relative w-full max-w-4xl h-[600px] bg-white rounded-[2rem] shadow-2xl overflow-hidden flex">
+        
+        {/* --- DOCTOR LOGIN FORM (Left Side) --- */}
+        <div className={`absolute top-0 left-0 w-1/2 h-full transition-all duration-700 ease-in-out z-[1] ${isSignUp ? "translate-x-full opacity-0" : "translate-x-0 opacity-100"}`}>
+          <div className="h-full flex flex-col justify-center px-16">
+            <form onSubmit={handleLogin} className="space-y-6">
+              <div className="text-center mb-8">
+                <div className="flex justify-center mb-2 text-cyan-600">
+                   <Stethoscope size={40} />
                 </div>
-                <input
-                  type="text"
-                  value={doctorId}
-                  onChange={(e) => setDoctorId(e.target.value)}
-                  placeholder="DoctorID"
-                  className="input input-bordered w-full"
-                  required
-                />
-              </label>
-
-              <label className="form-control w-full mb-6">
-                <div className="label">
-                  <span className="label-text">Password</span>
+                <h1 className="text-3xl font-black text-slate-800 tracking-tight">Doctor Login</h1>
+                <p className="text-slate-400 mt-2">Access your medical dashboard</p>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="form-control">
+                  <label className="label-text font-semibold mb-2 ml-1 text-slate-600">Doctor ID</label>
+                  <input 
+                    type="text" 
+                    placeholder="Enter your ID"
+                    className="input input-bordered w-full bg-slate-50 border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-cyan-500 transition-all" 
+                    value={doctorId}
+                    onChange={(e) => setDoctorId(e.target.value)}
+                    required 
+                  />
                 </div>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Password"
-                  className="input input-bordered w-full"
-                  required
-                />
-              </label>
+                <div className="form-control">
+                  <label className="label-text font-semibold mb-2 ml-1 text-slate-600">Password</label>
+                  <input 
+                    type="password" 
+                    placeholder="••••••••"
+                    className="input input-bordered w-full bg-slate-50 border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-cyan-500 transition-all" 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required 
+                  />
+                </div>
+              </div>
 
-              <button type="submit" className="btn mt-4 btn-primary w-full">
-                Send for verification
+              <button className="btn btn-accent w-full bg-cyan-600 border-none hover:bg-cyan-700 text-white shadow-lg shadow-cyan-100 rounded-xl h-12 text-lg">
+                Sign In
               </button>
             </form>
+          </div>
+        </div>
 
-            <p className="mt-2 text-red-500 justify-self-start">
-              MediRaksha will verify then let you in.
-            </p>
+        {/* --- DOCTOR REGISTRATION FORM (Right Side) --- */}
+        <div className={`absolute top-0 left-0 w-1/2 h-full transition-all duration-700 ease-in-out z-[2] ${isSignUp ? "translate-x-full opacity-100" : "translate-x-0 opacity-0 pointer-events-none"}`}>
+          <div className="h-full flex flex-col justify-center px-16">
+            <form onSubmit={handleSignup} className="space-y-6">
+              <div className="text-center mb-6">
+                <h1 className="text-3xl font-black text-slate-800 tracking-tight">Registration</h1>
+                <p className="text-slate-400 mt-2">Submit your credentials for verification</p>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="form-control">
+                  <label className="label-text font-semibold mb-2 ml-1 text-slate-600">Official Doctor ID</label>
+                  <input 
+                    type="text" 
+                    placeholder="E.g. DOC12345"
+                    className="input input-bordered w-full bg-slate-50 border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-cyan-500 transition-all" 
+                    value={doctorId}
+                    onChange={(e) => setDoctorId(e.target.value)}
+                    required 
+                  />
+                </div>
+                <div className="form-control">
+                  <label className="label-text font-semibold mb-2 ml-1 text-slate-600">Set Password</label>
+                  <input 
+                    type="password" 
+                    placeholder="••••••••"
+                    className="input input-bordered w-full bg-slate-50 border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-cyan-500 transition-all" 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required 
+                  />
+                </div>
+              </div>
 
-            <p className="justify-self-start cursor-pointer">
-              <span onClick={() => setsu(false)}>Already registered?</span>
-              <Link to="/auth" className="ml-3">
-                Patient Registration?
+              <div className="bg-amber-50 p-3 rounded-lg border border-amber-100">
+                 <p className="text-xs text-amber-700 leading-tight italic text-center">
+                   MediRaksha will manually verify your credentials before full access is granted.
+                 </p>
+              </div>
+
+              <button className="btn btn-primary w-full bg-cyan-600 border-none hover:bg-cyan-700 text-white shadow-lg shadow-cyan-100 rounded-xl h-12">
+                Send for Verification
+              </button>
+            </form>
+          </div>
+        </div>
+
+        {/* --- SLIDING OVERLAY PANEL --- */}
+        <div 
+          className={`absolute top-0 left-1/2 w-1/2 h-full z-[100] transition-transform duration-700 ease-in-out overflow-hidden
+            ${isSignUp ? "-translate-x-full" : "translate-x-0"}`}
+        >
+          <div 
+            className={`relative -left-full h-full w-[200%] transform transition-transform duration-700 ease-in-out text-white flex
+              ${isSignUp ? "translate-x-1/2" : "translate-x-0"}`}
+            style={{ background: 'linear-gradient(135deg, #0891b2 0%, #0e7490 100%)' }}
+          >
+            {/* Content for Login Side */}
+            <div className="w-1/2 h-full flex flex-col items-center justify-center p-12 text-center">
+              <h2 className="text-4xl font-bold mb-4">Registered Doctor?</h2>
+              <p className="mb-8 opacity-80 leading-relaxed">Log in to view your patient history and clinical schedule.</p>
+              <button 
+                onClick={() => setIsSignUp(false)}
+                className="btn btn-outline border-white text-white hover:bg-white hover:text-cyan-700 px-12 rounded-full border-2 h-12"
+              >
+                LOG IN
+              </button>
+              <Link to="/auth" className="mt-8 text-sm underline opacity-70 hover:opacity-100 transition-opacity">
+                Are you a Patient?
               </Link>
-            </p>
+            </div>
+
+            {/* Content for Signup Side */}
+            <div className="w-1/2 h-full flex flex-col items-center justify-center p-12 text-center">
+              <h2 className="text-4xl font-bold mb-4">New Doctor?</h2>
+              <p className="mb-8 opacity-80 leading-relaxed">Sign up to join our professional network and manage your patients effectively.</p>
+              <button 
+                onClick={() => setIsSignUp(true)}
+                className="btn btn-outline border-white text-white hover:bg-white hover:text-cyan-700 px-12 rounded-full border-2 h-12"
+              >
+                REGISTER NOW
+              </button>
+              <Link to="/auth" className="mt-8 text-sm underline opacity-70 hover:opacity-100 transition-opacity">
+                Are you a Patient?
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
-    );
-  }
 
-  // 🔹 Login UI
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-base-200">
-      <div className="card w-full max-w-sm shadow-xl bg-base-100">
-        <div className="card-body">
-          <div className="flex items-center justify-between mb-4">
-            <Link to="/" className="text-gray-500 hover:text-gray-700">
-              <ArrowLeft size={24} />
-            </Link>
-            <h2 className="text-2xl font-bold text-center grow">
-              Welcome back doctor
-            </h2>
-            <div className="w-6"></div>
-          </div>
-
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleLogin();
-            }}
-          >
-            <label className="form-control w-full mb-4">
-              <div className="label">
-                <span className="label-text">DoctorID</span>
-              </div>
-              <input
-                type="text"
-                value={doctorId}
-                onChange={(e) => setDoctorId(e.target.value)}
-                placeholder="DoctorID"
-                className="input input-bordered w-full"
-                autoFocus
-                required
-              />
-            </label>
-
-            <label className="form-control w-full mb-6">
-              <div className="label">
-                <span className="label-text">Password</span>
-              </div>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
-                className="input input-bordered w-full"
-                required
-              />
-            </label>
-
-            <button type="submit" className="btn mt-4 btn-accent w-full">
-              Log In
-            </button>
-          </form>
-
-          <p
-            className="justify-self-start cursor-pointer"
-            onClick={() => setsu(true)}
-          >
-            Not a registered Doctor?
-          </p>
-        </div>
       </div>
     </div>
   );

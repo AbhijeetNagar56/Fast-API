@@ -1,14 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import axiosInstance from "../api/axios";
-import toast from "react-hot-toast";
-import {
-  AGE_MAX,
-  AGE_MIN,
-  isValidGender,
-  isValidPhoneNumber,
-  parseAge,
-} from "../utils/validation";
 
 export default function MyDetail() {
   const [user, setUser] = useState(null);
@@ -18,8 +10,7 @@ export default function MyDetail() {
     name: "",
     email: "",
     gender: "",
-    age: "",
-    phoneNumber: "",
+    age: ""
   });
 
   const navigate = useNavigate();
@@ -37,8 +28,7 @@ export default function MyDetail() {
           name: data.name || "",
           email: data.email || "",
           gender: data.gender || "",
-          age: data.age || "",
-          phoneNumber: data.phoneNumber || "",
+          age: data.age || ""
         });
       } catch (error) {
         console.error(error.response?.data?.msg || "Error fetching user details");
@@ -74,39 +64,21 @@ export default function MyDetail() {
 
   const handleSave = async () => {
     try {
-      const parsedAge = parseAge(formData.age);
-      if (!isValidGender(formData.gender)) {
-        toast.error("Please select a valid gender");
-        return;
-      }
-      if (parsedAge === null) {
-        toast.error(`Age must be a whole number between ${AGE_MIN} and ${AGE_MAX}`);
-        return;
-      }
-      if (!formData.name?.trim()) {
-        toast.error("Name is required");
-        return;
-      }
-      if (!isValidPhoneNumber(formData.phoneNumber)) {
-        toast.error("Phone number must be exactly 10 digits");
-        return;
-      }
+      const token = localStorage.getItem("token");
 
       // 🔹 Axios PATCH request
       const res = await axiosInstance.patch("/home/update", {
         gender: formData.gender,
-        age: parsedAge,
-        name: formData.name.trim(),
-        phoneNumber: formData.phoneNumber.trim(),
+        age: formData.age,
+        name: formData.name, // optional: allow name editing too
       });
 
       const data = res.data;
-      toast.success("Details updated successfully");
+      alert("Details updated successfully!");
       setUser(data.user); // Updated user
       setEditing(false);
     } catch (error) {
       console.error(error.response?.data?.msg || "Error updating details");
-      toast.error(error.response?.data?.msg || "Error updating details");
     }
   };
 
@@ -153,23 +125,6 @@ export default function MyDetail() {
             </div>
 
             <div className="mb-4">
-              <label className="block mb-1 font-bold">Phone Number</label>
-              <input
-                type="tel"
-                name="phoneNumber"
-                value={formData.phoneNumber}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    phoneNumber: e.target.value.replace(/\D/g, "").slice(0, 10),
-                  }))
-                }
-                className="input input-bordered w-full"
-                maxLength={10}
-              />
-            </div>
-
-            <div className="mb-4">
               <label className="block mb-1 font-bold">Gender</label>
               <select
                 name="gender"
@@ -192,8 +147,6 @@ export default function MyDetail() {
                 value={formData.age}
                 onChange={handleChange}
                 className="input input-bordered w-full"
-                min={AGE_MIN}
-                max={AGE_MAX}
               />
             </div>
 
@@ -220,9 +173,6 @@ export default function MyDetail() {
             </div>
             <div className="mb-4">
               <span className="font-bold">Age:</span> {user.age}
-            </div>
-            <div className="mb-4">
-              <span className="font-bold">Phone Number:</span> {user.phoneNumber}
             </div>
 
             <div className="flex gap-3">

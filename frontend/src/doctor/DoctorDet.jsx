@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import axiosInstance from "../api/axios";
 import toast from "react-hot-toast";
-import { AGE_MAX, AGE_MIN, parseAge } from "../utils/validation";
 
 export default function DoctorDetail() {
   const [doctor, setDoctor] = useState(null);
@@ -67,33 +66,24 @@ export default function DoctorDetail() {
 
   const handleSave = async () => {
     try {
-      const parsedAge = parseAge(formData.age);
-      if (!formData.name?.trim() || !formData.hospital?.trim() || !formData.doctorId?.trim()) {
-        toast.error("Doctor ID, name and hospital are required");
-        return;
-      }
-      if (parsedAge === null) {
-        toast.error(`Age must be a whole number between ${AGE_MIN} and ${AGE_MAX}`);
-        return;
-      }
-
       const res = await axiosInstance.patch("/doctor/update", {
-        doctorId: formData.doctorId.trim(),
-        name: formData.name.trim(),
-        age: parsedAge,
-        hospital: formData.hospital.trim(),
+        doctorId: formData.doctorId,
+        name: formData.name,
+        age: formData.age,
+        hospital: formData.hospital,
       });
 
       const data = res.data;
 
       toast.success("Doctor details updated successfully!");
 
-      setDoctor(data.user);
+      // ✅ IMPORTANT FIX (prevents white screen)
+      setDoctor(data);
       setFormData({
-        doctorId: data.user?.doctorId || "",
-        name: data.user?.name || "",
-        age: data.user?.age || "",
-        hospital: data.user?.hospital || "",
+        doctorId: data.doctorId,
+        name: data.name,
+        age: data.age,
+        hospital: data.hospital,
       });
 
       setEditing(false);
@@ -171,8 +161,6 @@ export default function DoctorDetail() {
                 value={formData.age}
                 onChange={handleChange}
                 className="input input-bordered w-full"
-                min={AGE_MIN}
-                max={AGE_MAX}
               />
             </div>
 
